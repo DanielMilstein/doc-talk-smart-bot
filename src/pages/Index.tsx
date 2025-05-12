@@ -1,12 +1,14 @@
+
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PDFData } from "@/components/PDFUploader";
 import PDFUploader from "@/components/PDFUploader";
 import PDFList from "@/components/PDFList";
-import ChatInterface from "@/components/ChatInterface";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const Index: React.FC = () => {
+  const navigate = useNavigate();
   const [pdfs, setPdfs] = useState<PDFData[]>([]);
   const [activePDFId, setActivePDFId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,6 +21,7 @@ const Index: React.FC = () => {
       setPdfs((prev) => [...prev, pdfData]);
       setActivePDFId(pdfData.id);
       setIsProcessing(false);
+      toast.success("PDF successfully processed");
     }, 1000);
   };
 
@@ -30,12 +33,14 @@ const Index: React.FC = () => {
     toast.success("Document removed");
   };
 
-  const handleStartNewChat = () => {
-    // In a real app, this would clear the chat history but keep the same PDF
-    toast.info("Started a new chat session");
+  const handleChatWithPDF = () => {
+    const activePDF = pdfs.find((pdf) => pdf.id === activePDFId);
+    if (activePDF) {
+      navigate("/chat", { state: { pdf: activePDF } });
+    } else {
+      toast.error("Please select a PDF first");
+    }
   };
-
-  const activePDF = pdfs.find((pdf) => pdf.id === activePDFId) || null;
 
   return (
     <div className="min-h-screen bg-secondary/30 flex flex-col">
@@ -47,25 +52,31 @@ const Index: React.FC = () => {
         </div>
       </header>
       
-      <main className="container flex-grow py-6 flex flex-col md:flex-row gap-6">
-        <div className="w-full md:w-1/3 space-y-6">
+      <main className="container flex-grow py-6">
+        <div className="space-y-6">
           <PDFUploader 
             onFileProcessed={handleFileProcessed} 
             isProcessing={isProcessing}
           />
+          
           <PDFList 
             pdfs={pdfs}
             onDeletePDF={handleDeletePDF}
             activePDF={activePDFId}
             setActivePDF={setActivePDFId}
           />
-        </div>
-        
-        <div className="w-full md:w-2/3 flex flex-col">
-          <ChatInterface 
-            activePDF={activePDF}
-            onStartNewChat={handleStartNewChat}
-          />
+          
+          {activePDFId && (
+            <div className="flex justify-center">
+              <Button 
+                size="lg" 
+                onClick={handleChatWithPDF}
+                className="px-8"
+              >
+                Chat with Document
+              </Button>
+            </div>
+          )}
         </div>
       </main>
       
