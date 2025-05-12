@@ -31,12 +31,12 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
 
   const handleFileUpload = useCallback(async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Only PDF files are supported");
+      toast.error("Solo se permiten archivos PDF");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File size exceeds 10MB limit");
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error("Archivo excede el tamaño máximo de 100MB");
       return;
     }
 
@@ -58,11 +58,11 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
         dateAdded: new Date(),
       };
 
-      toast.success(`"${file.name}" uploaded successfully`);
+      toast.success(`"${file.name}" subido con éxito`);
       onFileProcessed(pdfData);
     } catch (error) {
-      console.error("Error processing PDF:", error);
-      toast.error("Failed to process PDF file");
+      console.error("Error procesando PDF:", error);
+      toast.error("Error al procesar el PDF");
     }
   }, [onFileProcessed]);
 
@@ -125,10 +125,10 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
               <line x1="10" y1="9" x2="8" y2="9" />
             </svg>
             <p className="text-center text-muted-foreground mb-2">
-              Drag and drop your PDF here
+              Arrastra y suelta tu archivo PDF aquí
             </p>
             <p className="text-center text-sm text-muted-foreground mb-4">
-              or
+              o
             </p>
             <label htmlFor="pdf-upload">
               <Button
@@ -136,7 +136,7 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
                 className="cursor-pointer"
                 disabled={isProcessing}
               >
-                Select PDF
+                Selecciona PDF
                 <input
                   id="pdf-upload"
                   type="file"
@@ -149,7 +149,7 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
             </label>
           </div>
           <div className="mt-4 text-sm text-muted-foreground text-center">
-            <p>Maximum file size: 10MB</p>
+            <p>Tamaño máximo: 100MB</p>
           </div>
         </CardContent>
       </Card>

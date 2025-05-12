@@ -48,10 +48,10 @@ const Chat: React.FC = () => {
       <header className="bg-background border-b py-4 px-6">
         <div className="container flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-            PDF <span className="text-primary">ChatRAG</span> Chat
+            <span className="text-primary">ChatAdmisión</span>
           </h1>
           <Button variant="outline" onClick={handleGoToHome}>
-            Back to Home
+            Volver al Inicio
           </Button>
         </div>
       </header>
@@ -64,7 +64,7 @@ const Chat: React.FC = () => {
       
       <footer className="bg-background border-t py-4 px-6 text-center text-sm text-muted-foreground">
         <div className="container">
-          PDF ChatRAG - Ask questions about your PDF documents
+          ChatAdmisión - Asistente Virtual
         </div>
       </footer>
     </div>

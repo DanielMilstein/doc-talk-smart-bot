@@ -21,7 +21,7 @@ const PDFList: React.FC<PDFListProps> = ({
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-            <p>No PDFs uploaded yet</p>
+            <p>No hay PDFs subidos todavia</p>
           </div>
         </CardContent>
       </Card>

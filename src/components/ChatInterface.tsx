@@ -25,8 +25,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
       id: crypto.randomUUID(),
       role: "assistant",
       content: pdfs.length > 0 
-        ? `I'm ready to answer questions about your documents. You have ${pdfs.length} document${pdfs.length !== 1 ? 's' : ''} uploaded.`
-        : "I'm ready to chat! Upload some documents to enable me to answer questions about them.",
+        ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documento${pdfs.length !== 1 ? 's' : ''} subidos.`
+        : "Estoy listo para chatear! Sube algunos documentos para que pueda responder preguntas sobre ellos.",
       timestamp: new Date(),
     };
     setMessages([welcomeMessage]);
@@ -38,8 +38,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
       const updatedWelcomeMessage: Message = {
         ...messages[0],
         content: pdfs.length > 0 
-          ? `I'm ready to answer questions about your documents. You have ${pdfs.length} document${pdfs.length !== 1 ? 's' : ''} uploaded.`
-          : "I'm ready to chat! Upload some documents to enable me to answer questions about them.",
+          ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documentos ${pdfs.length !== 1 ? 's' : ''} subidos.`
+          : "Estoy listo para chatear! Sube algunos documentos para que pueda responder preguntas sobre ellos.",
       };
       setMessages([updatedWelcomeMessage]);
     }
@@ -94,8 +94,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
       
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error("Error generating response:", error);
-      toast.error("Failed to generate a response");
+      console.error("Error generando respuesta:", error);
+      toast.error("Falla al generar respuesta");
     } finally {
       setIsProcessing(false);
     }
@@ -105,26 +105,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
     // Simple mock responses based on question keywords when PDFs are available
     const pdfNames = pdfs.map(pdf => `"${pdf.name}"`).join(", ");
     
+
     const responses = [
-      `Based on the content of your documents (${pdfNames}), I found that the main points related to your question are about improving efficiency through process optimization and resource allocation.`,
-      `Your documents mention that this topic was researched extensively in 2023, with findings suggesting a correlation between the factors you're asking about.`,
-      `According to the uploaded documents, the answer to your question involves multiple factors including market trends, regulatory requirements, and operational constraints.`,
-      `I searched across all your documents and found that approximately 75% of cases exhibit the pattern you're asking about, with variations depending on contextual factors.`,
-      `The documents show different perspectives on this topic. Some emphasize the importance of innovation, while others focus more on risk management and compliance.`
-    ];
+      `Basado en el contenido de tus documentos (${pdfNames}), encontré que los puntos principales relacionados con tu pregunta son sobre mejorar la eficiencia a través de la optimización de procesos y la asignación de recursos.`,
+      `Tus documentos mencionan que este tema fue investigado extensamente en 2023, con hallazgos que sugieren una correlación entre los factores que preguntas.`,
+      `Según los documentos subidos, la respuesta a tu pregunta involucra múltiples factores incluyendo tendencias de mercado, requisitos regulatorios y restricciones operativas.`,
+      `Busqué en todos tus documentos y encontré que aproximadamente el 75% de los casos exhiben el patrón que preguntas, con variaciones dependiendo de factores contextuales.`,
+      `Los documentos muestran diferentes perspectivas sobre este tema. Algunos enfatizan la importancia de la innovación, mientras que otros se centran más en la gestión de riesgos y el cumplimiento.`
+    ]
     
     return responses[Math.floor(Math.random() * responses.length)];
   };
   
   const generateGeneralResponse = (question: string): string => {
     // Simple mock responses for general chat without PDFs
+
     const responses = [
-      "I can provide general information on this topic, but if you upload relevant documents, I'll be able to give you more specific answers.",
-      "That's an interesting question! In general, experts suggest approaching this from multiple angles. Upload specific documents for more tailored insights.",
-      "Based on general knowledge, there are several perspectives on this matter. For more precise information, consider uploading relevant PDFs.",
-      "I can chat about this topic in general terms. To get insights from specific documents, try uploading some PDFs related to your question.",
-      "While I can discuss this generally, my specialty is analyzing document content. Upload some PDFs to see how I can extract specific information for you!"
-    ];
+      "Puedo proporcionarte información general sobre este tema, pero si subes documentos relevantes, podré darte respuestas más específicas.",
+      "¡Esa es una pregunta interesante! En general, los expertos sugieren abordar esto desde múltiples ángulos. Sube documentos específicos para obtener información más personalizada.",
+      "Según el conocimiento general, hay varias perspectivas sobre este asunto. Para obtener información más precisa, considera subir PDFs relevantes.",
+      "Puedo hablar sobre este tema en términos generales. Para obtener información de documentos específicos, intenta subir algunos PDFs relacionados con tu pregunta.",
+      "Si bien puedo discutir esto en términos generales, mi especialidad es analizar el contenido de documentos. ¡Sube algunos PDFs para ver cómo puedo extraer información específica para ti!"
+    ]
     
     return responses[Math.floor(Math.random() * responses.length)];
   };
@@ -134,7 +136,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
       <CardHeader className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium">
-            Chat Assistant
+            Asistente Virtual
             {pdfs.length > 0 && (
               <span className="text-sm font-normal text-muted-foreground ml-2">
                 ({pdfs.length} document{pdfs.length !== 1 ? 's' : ''})
@@ -142,7 +144,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
             )}
           </CardTitle>
           <Button variant="outline" size="sm" onClick={onStartNewChat}>
-            New Chat
+            Nuevo Chat
           </Button>
         </div>
       </CardHeader>
@@ -166,12 +168,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={pdfs.length > 0 ? "Ask about your documents..." : "Ask me anything..."}
+            placeholder={pdfs.length > 0 ? "Preguntame sobre tus documentos" : "Preguntame cualquier cosa..."}
             disabled={isProcessing}
             className="flex-grow"
           />
           <Button type="submit" disabled={isProcessing || !input.trim()}>
-            Send
+            Enviar
           </Button>
         </form>
       </CardFooter>

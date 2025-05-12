@@ -19,13 +19,13 @@ const Admin: React.FC = () => {
     setTimeout(() => {
       setPdfs((prev) => [...prev, pdfData]);
       setIsProcessing(false);
-      toast.success("PDF successfully processed");
+      toast.success("PDF procesado con éxito");
     }, 1000);
   };
 
   const handleDeletePDF = (id: string) => {
     setPdfs((prev) => prev.filter((pdf) => pdf.id !== id));
-    toast.success("Document removed");
+    toast.success("Documento eliminado con éxito");
   };
 
   const handleGoToChat = () => {
@@ -37,9 +37,9 @@ const Admin: React.FC = () => {
       <header className="bg-background border-b py-4 px-6">
         <div className="container flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-            PDF <span className="text-primary">ChatRAG</span> Admin
+            <span className="text-primary">ChatAdmisión</span> Admin
           </h1>
-          <Button onClick={handleGoToChat}>Go to Chat</Button>
+          <Button onClick={handleGoToChat}>Ir al chat</Button>
         </div>
       </header>
       
@@ -59,7 +59,7 @@ const Admin: React.FC = () => {
       
       <footer className="bg-background border-t py-4 px-6 text-center text-sm text-muted-foreground">
         <div className="container">
-          PDF ChatRAG Admin - Upload and manage documents
+          Panel de administración
         </div>
       </footer>
     </div>
