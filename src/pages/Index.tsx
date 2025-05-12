@@ -28,7 +28,7 @@ const Index: React.FC = () => {
         <div className="flex flex-col items-center justify-center space-y-8 h-[70vh]">
           <h2 className="text-3xl font-bold">Bienvenido a ChatAdmisión</h2>
           <p className="text-muted-foreground text-center max-w-md">
-            Pregunta sobre tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas.
+            Pregunta tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
