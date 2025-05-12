@@ -3,37 +3,47 @@ import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import ChatMessage, { Message, MessageRole } from "./ChatMessage";
 import { PDFData } from "./PDFUploader";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 
 interface ChatInterfaceProps {
-  activePDF: PDFData | null;
+  pdfs: PDFData[];
   onStartNewChat: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ activePDF, onStartNewChat }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Add intro message when active PDF changes
+  // Add intro message when component mounts
   useEffect(() => {
-    if (activePDF) {
-      const introMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: `I'm ready to answer questions about "${activePDF.name}". What would you like to know?`,
-        timestamp: new Date(),
+    const welcomeMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: pdfs.length > 0 
+        ? `I'm ready to answer questions about your documents. You have ${pdfs.length} document${pdfs.length !== 1 ? 's' : ''} uploaded.`
+        : "I'm ready to chat! Upload some documents to enable me to answer questions about them.",
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+  }, []);
+
+  // Update welcome message when PDFs change
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].role === "assistant") {
+      const updatedWelcomeMessage: Message = {
+        ...messages[0],
+        content: pdfs.length > 0 
+          ? `I'm ready to answer questions about your documents. You have ${pdfs.length} document${pdfs.length !== 1 ? 's' : ''} uploaded.`
+          : "I'm ready to chat! Upload some documents to enable me to answer questions about them.",
       };
-      setMessages([introMessage]);
-    } else {
-      setMessages([]);
+      setMessages([updatedWelcomeMessage]);
     }
-  }, [activePDF]);
+  }, [pdfs]);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -43,7 +53,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activePDF, onStartNewChat
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!input.trim() || !activePDF) return;
+    if (!input.trim()) return;
     
     // Add user message
     const userMessage: Message = {
@@ -61,13 +71,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activePDF, onStartNewChat
       // Simulate AI processing time
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      // In a real implementation, we would:
-      // 1. Process the PDF content using PDF.js
-      // 2. Create embeddings from the PDF content
-      // 3. Search for relevant content based on the user's question
-      // 4. Generate a response using an AI model
+      let aiResponse: string;
       
-      const aiResponse = generateMockResponse(input, activePDF.name);
+      if (pdfs.length > 0) {
+        // In a real implementation, we would:
+        // 1. Process the content of all PDFs
+        // 2. Create embeddings from the PDF content
+        // 3. Search for relevant content based on the user's question across all PDFs
+        // 4. Generate a response using an AI model
+        aiResponse = generateResponseFromPDFs(input, pdfs);
+      } else {
+        // General chat without PDF context
+        aiResponse = generateGeneralResponse(input);
+      }
       
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
@@ -85,51 +101,46 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activePDF, onStartNewChat
     }
   };
   
-  const generateMockResponse = (question: string, pdfName: string): string => {
-    // Simple mock responses based on question keywords
+  const generateResponseFromPDFs = (question: string, pdfs: PDFData[]): string => {
+    // Simple mock responses based on question keywords when PDFs are available
+    const pdfNames = pdfs.map(pdf => `"${pdf.name}"`).join(", ");
+    
     const responses = [
-      `Based on the content of "${pdfName}", I found that the main points related to your question are about improving efficiency through process optimization and resource allocation.`,
-      `The document "${pdfName}" mentions that this topic was researched extensively in 2023, with findings suggesting a correlation between the factors you're asking about.`,
-      `According to "${pdfName}", the answer to your question involves multiple factors including market trends, regulatory requirements, and operational constraints.`,
-      `I couldn't find specific information about this in "${pdfName}". Would you like to ask something else about the document?`,
-      `The data in "${pdfName}" shows that approximately 75% of cases exhibit the pattern you're asking about, with variations depending on contextual factors.`
+      `Based on the content of your documents (${pdfNames}), I found that the main points related to your question are about improving efficiency through process optimization and resource allocation.`,
+      `Your documents mention that this topic was researched extensively in 2023, with findings suggesting a correlation between the factors you're asking about.`,
+      `According to the uploaded documents, the answer to your question involves multiple factors including market trends, regulatory requirements, and operational constraints.`,
+      `I searched across all your documents and found that approximately 75% of cases exhibit the pattern you're asking about, with variations depending on contextual factors.`,
+      `The documents show different perspectives on this topic. Some emphasize the importance of innovation, while others focus more on risk management and compliance.`
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
+  
+  const generateGeneralResponse = (question: string): string => {
+    // Simple mock responses for general chat without PDFs
+    const responses = [
+      "I can provide general information on this topic, but if you upload relevant documents, I'll be able to give you more specific answers.",
+      "That's an interesting question! In general, experts suggest approaching this from multiple angles. Upload specific documents for more tailored insights.",
+      "Based on general knowledge, there are several perspectives on this matter. For more precise information, consider uploading relevant PDFs.",
+      "I can chat about this topic in general terms. To get insights from specific documents, try uploading some PDFs related to your question.",
+      "While I can discuss this generally, my specialty is analyzing document content. Upload some PDFs to see how I can extract specific information for you!"
     ];
     
     return responses[Math.floor(Math.random() * responses.length)];
   };
 
-  if (!activePDF) {
-    return (
-      <Card className="flex-grow flex flex-col h-full">
-        <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
-          <svg
-            className="w-16 h-16 text-muted-foreground mb-4"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-          <h3 className="text-lg font-medium mb-2">No PDF Selected</h3>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            Upload a PDF document or select one from your list to start chatting with the AI about its contents.
-          </p>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className="flex-grow flex flex-col h-full">
       <CardHeader className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-medium">{activePDF.name}</CardTitle>
+          <CardTitle className="text-lg font-medium">
+            Chat Assistant
+            {pdfs.length > 0 && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({pdfs.length} document{pdfs.length !== 1 ? 's' : ''})
+              </span>
+            )}
+          </CardTitle>
           <Button variant="outline" size="sm" onClick={onStartNewChat}>
             New Chat
           </Button>
@@ -155,7 +166,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activePDF, onStartNewChat
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question about this document..."
+            placeholder={pdfs.length > 0 ? "Ask about your documents..." : "Ask me anything..."}
             disabled={isProcessing}
             className="flex-grow"
           />

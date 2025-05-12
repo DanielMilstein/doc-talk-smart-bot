@@ -2,22 +2,16 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { PDFData } from "./PDFUploader";
-import { Separator } from "@/components/ui/separator";
 
 interface PDFListProps {
   pdfs: PDFData[];
   onDeletePDF: (id: string) => void;
-  activePDF: string | null;
-  setActivePDF: (id: string) => void;
 }
 
 const PDFList: React.FC<PDFListProps> = ({
   pdfs,
   onDeletePDF,
-  activePDF,
-  setActivePDF,
 }) => {
   if (pdfs.length === 0) {
     return (
@@ -43,12 +37,7 @@ const PDFList: React.FC<PDFListProps> = ({
         <ul className="divide-y">
           {pdfs.map((pdf) => (
             <li key={pdf.id} className="py-3 px-6">
-              <div 
-                className={`flex items-center justify-between cursor-pointer ${
-                  activePDF === pdf.id ? "bg-muted/50 rounded-md -mx-1 px-1" : ""
-                }`}
-                onClick={() => setActivePDF(pdf.id)}
-              >
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="text-primary">
                     <svg
@@ -85,11 +74,8 @@ const PDFList: React.FC<PDFListProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeletePDF(pdf.id);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => onDeletePDF(pdf.id)}
+                  className="opacity-100 group-hover:opacity-100 transition-opacity"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

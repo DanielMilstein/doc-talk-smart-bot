@@ -1,16 +1,13 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { PDFData } from "@/components/PDFUploader";
 import PDFUploader from "@/components/PDFUploader";
 import PDFList from "@/components/PDFList";
-import { Button } from "@/components/ui/button";
+import ChatInterface from "@/components/ChatInterface";
 import { toast } from "sonner";
 
 const Index: React.FC = () => {
-  const navigate = useNavigate();
   const [pdfs, setPdfs] = useState<PDFData[]>([]);
-  const [activePDFId, setActivePDFId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFileProcessed = (pdfData: PDFData) => {
@@ -19,7 +16,6 @@ const Index: React.FC = () => {
     // Simulate PDF processing time
     setTimeout(() => {
       setPdfs((prev) => [...prev, pdfData]);
-      setActivePDFId(pdfData.id);
       setIsProcessing(false);
       toast.success("PDF successfully processed");
     }, 1000);
@@ -27,19 +23,12 @@ const Index: React.FC = () => {
 
   const handleDeletePDF = (id: string) => {
     setPdfs((prev) => prev.filter((pdf) => pdf.id !== id));
-    if (activePDFId === id) {
-      setActivePDFId(null);
-    }
     toast.success("Document removed");
   };
 
-  const handleChatWithPDF = () => {
-    const activePDF = pdfs.find((pdf) => pdf.id === activePDFId);
-    if (activePDF) {
-      navigate("/chat", { state: { pdf: activePDF } });
-    } else {
-      toast.error("Please select a PDF first");
-    }
+  const handleStartNewChat = () => {
+    // Reset chat to initial state
+    toast.success("Started a new chat");
   };
 
   return (
@@ -53,30 +42,27 @@ const Index: React.FC = () => {
       </header>
       
       <main className="container flex-grow py-6">
-        <div className="space-y-6">
-          <PDFUploader 
-            onFileProcessed={handleFileProcessed} 
-            isProcessing={isProcessing}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left column: PDF upload and management */}
+          <div className="space-y-6">
+            <PDFUploader 
+              onFileProcessed={handleFileProcessed} 
+              isProcessing={isProcessing}
+            />
+            
+            <PDFList 
+              pdfs={pdfs}
+              onDeletePDF={handleDeletePDF}
+            />
+          </div>
           
-          <PDFList 
-            pdfs={pdfs}
-            onDeletePDF={handleDeletePDF}
-            activePDF={activePDFId}
-            setActivePDF={setActivePDFId}
-          />
-          
-          {activePDFId && (
-            <div className="flex justify-center">
-              <Button 
-                size="lg" 
-                onClick={handleChatWithPDF}
-                className="px-8"
-              >
-                Chat with Document
-              </Button>
-            </div>
-          )}
+          {/* Right column: Chat interface */}
+          <div className="h-[calc(100vh-12rem)]">
+            <ChatInterface 
+              pdfs={pdfs}
+              onStartNewChat={handleStartNewChat}
+            />
+          </div>
         </div>
       </main>
       
