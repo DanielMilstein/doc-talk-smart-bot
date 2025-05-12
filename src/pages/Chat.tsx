@@ -12,7 +12,7 @@ const Chat: React.FC = () => {
   // In a real application, you would fetch the PDFs from your storage/database here
   // For now, we'll just use a mock example
   useEffect(() => {
-    // Mock fetching PDFs from storage
+    // Mock fetching PDFs from storage that would be uploaded by admins
     const mockPdfs: PDFData[] = [
       {
         id: "pdf1",
@@ -39,7 +39,7 @@ const Chat: React.FC = () => {
     // Logic to start a new chat
   };
 
-  const handleBackToList = () => {
+  const handleGoToHome = () => {
     navigate("/");
   };
 
@@ -48,10 +48,10 @@ const Chat: React.FC = () => {
       <header className="bg-background border-b py-4 px-6">
         <div className="container flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-            PDF <span className="text-primary">ChatRAG</span>
+            PDF <span className="text-primary">ChatRAG</span> Chat
           </h1>
-          <Button variant="outline" onClick={handleBackToList}>
-            Back to Documents
+          <Button variant="outline" onClick={handleGoToHome}>
+            Back to Home
           </Button>
         </div>
       </header>

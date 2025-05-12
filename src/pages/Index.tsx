@@ -1,34 +1,17 @@
 
-import React, { useState } from "react";
-import { PDFData } from "@/components/PDFUploader";
-import PDFUploader from "@/components/PDFUploader";
-import PDFList from "@/components/PDFList";
-import ChatInterface from "@/components/ChatInterface";
-import { toast } from "sonner";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index: React.FC = () => {
-  const [pdfs, setPdfs] = useState<PDFData[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleFileProcessed = (pdfData: PDFData) => {
-    setIsProcessing(true);
-    
-    // Simulate PDF processing time
-    setTimeout(() => {
-      setPdfs((prev) => [...prev, pdfData]);
-      setIsProcessing(false);
-      toast.success("PDF successfully processed");
-    }, 1000);
+  const navigate = useNavigate();
+  
+  const goToChat = () => {
+    navigate("/chat");
   };
-
-  const handleDeletePDF = (id: string) => {
-    setPdfs((prev) => prev.filter((pdf) => pdf.id !== id));
-    toast.success("Document removed");
-  };
-
-  const handleStartNewChat = () => {
-    // Reset chat to initial state
-    toast.success("Started a new chat");
+  
+  const goToAdmin = () => {
+    navigate("/admin");
   };
 
   return (
@@ -42,26 +25,19 @@ const Index: React.FC = () => {
       </header>
       
       <main className="container flex-grow py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left column: PDF upload and management */}
-          <div className="space-y-6">
-            <PDFUploader 
-              onFileProcessed={handleFileProcessed} 
-              isProcessing={isProcessing}
-            />
-            
-            <PDFList 
-              pdfs={pdfs}
-              onDeletePDF={handleDeletePDF}
-            />
-          </div>
+        <div className="flex flex-col items-center justify-center space-y-8 h-[70vh]">
+          <h2 className="text-3xl font-bold">Welcome to PDF ChatRAG</h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            Get insights from your documents with our advanced AI chat assistant.
+          </p>
           
-          {/* Right column: Chat interface */}
-          <div className="h-[calc(100vh-12rem)]">
-            <ChatInterface 
-              pdfs={pdfs}
-              onStartNewChat={handleStartNewChat}
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button size="lg" onClick={goToChat}>
+              Start Chatting
+            </Button>
+            <Button size="lg" variant="outline" onClick={goToAdmin}>
+              Admin Portal
+            </Button>
           </div>
         </div>
       </main>
