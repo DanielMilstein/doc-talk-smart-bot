@@ -38,7 +38,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
       const updatedWelcomeMessage: Message = {
         ...messages[0],
         content: pdfs.length > 0 
-          ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documentos ${pdfs.length !== 1 ? 's' : ''} subidos.`
+          ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documento${pdfs.length !== 1 ? 's' : ''} subidos.`
           : "Estoy listo para chatear! Sube algunos documentos para que pueda responder preguntas sobre ellos.",
       };
       setMessages([updatedWelcomeMessage]);

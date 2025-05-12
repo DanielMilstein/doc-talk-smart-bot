@@ -17,7 +17,7 @@ const PDFList: React.FC<PDFListProps> = ({
     return (
       <Card className="flex-grow">
         <CardHeader>
-          <CardTitle className="text-lg font-medium">My Documents</CardTitle>
+          <CardTitle className="text-lg font-medium">Mis Documentos</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
@@ -31,7 +31,7 @@ const PDFList: React.FC<PDFListProps> = ({
   return (
     <Card className="flex-grow">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">My Documents</CardTitle>
+        <CardTitle className="text-lg font-medium">Mis Documentos</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <ul className="divide-y">
