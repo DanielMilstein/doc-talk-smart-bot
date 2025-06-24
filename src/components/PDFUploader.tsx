@@ -1,8 +1,12 @@
-
 import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { InfoIcon, Upload, CheckCircle } from "lucide-react";
+import { apiClient } from "@/services/apiClient";
 
 interface PDFUploaderProps {
   onFileProcessed: (pdfData: PDFData) => void;
@@ -20,6 +24,8 @@ export interface PDFData {
 
 const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState("");
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -35,36 +41,47 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error("Archivo excede el tamaño máximo de 100MB");
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Archivo excede el tamaño máximo de 10MB");
       return;
     }
 
-    try {
-      // Read file as array buffer
-      const arrayBuffer = await file.arrayBuffer();
-      
-      // We'll use the pdfjsLib in a separate service, for now we'll just simulate
-      // Extract text using a simple method for this demo
-      const textContent = "Extracted text would be here in production";
-      
-      // Generate a unique ID for the PDF
-      const pdfData: PDFData = {
-        id: Math.random().toString(36).substring(2, 9),
-        name: file.name,
-        content: textContent,
-        pages: Math.floor(Math.random() * 10) + 1, // Simulating page count for now
-        size: formatBytes(file.size),
-        dateAdded: new Date(),
-      };
+    setIsUploading(true);
 
-      toast.success(`"${file.name}" subido con éxito`);
-      onFileProcessed(pdfData);
+    try {
+      const response = await apiClient.uploadPDF(file, sourceUrl || undefined);
+      
+      if (response.success && response.data) {
+        const { document_id, filename, text_length, is_new, message } = response.data;
+        
+        // Create PDFData object for local state
+        const pdfData: PDFData = {
+          id: document_id,
+          name: filename,
+          content: `Document uploaded with ${text_length} characters extracted`,
+          pages: 1, // Backend doesn't return page count
+          size: formatBytes(file.size),
+          dateAdded: new Date(),
+        };
+
+        if (is_new) {
+          toast.success(`"${filename}" subido con éxito`);
+        } else {
+          toast.info(`"${filename}" ya existe en el sistema`);
+        }
+
+        onFileProcessed(pdfData);
+        setSourceUrl(""); // Clear source URL after successful upload
+      } else {
+        throw new Error(response.error || 'Upload failed');
+      }
     } catch (error) {
-      console.error("Error procesando PDF:", error);
-      toast.error("Error al procesar el PDF");
+      console.error("Error uploading PDF:", error);
+      toast.error("Error al subir el PDF");
+    } finally {
+      setIsUploading(false);
     }
-  }, [onFileProcessed]);
+  }, [onFileProcessed, sourceUrl]);
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -96,60 +113,99 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
     }
   }, [handleFileUpload]);
 
+  const isDisabled = isProcessing || isUploading;
+
   return (
     <div className="w-full h-full flex flex-col space-y-4">
+      <Alert>
+        <InfoIcon className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Subida de documentos habilitada:</strong> Puedes subir archivos PDF que se procesarán 
+          automáticamente con el sistema RAG. Los documentos se almacenarán en el servidor y estarán 
+          disponibles para consultas inmediatamente.
+        </AlertDescription>
+      </Alert>
+      
       <Card className="flex-grow">
+        <CardHeader>
+          <CardTitle>Subir Documento PDF</CardTitle>
+        </CardHeader>
         <CardContent className="p-6">
-          <div
-            className={`border-2 border-dashed rounded-lg h-64 flex flex-col items-center justify-center p-6 transition-colors ${
-              isDragging ? "pdf-drop-active" : "hover:border-primary/50"
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <svg
-              className="w-12 h-12 text-muted-foreground mb-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="space-y-4">
+            {/* Source URL input */}
+            <div className="space-y-2">
+              <Label htmlFor="source-url">URL de origen (opcional)</Label>
+              <Input
+                id="source-url"
+                type="url"
+                placeholder="https://example.com/document.pdf"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                disabled={isDisabled}
+              />
+              <p className="text-xs text-muted-foreground">
+                Si el documento proviene de una URL específica, agrégala aquí para mejor trazabilidad
+              </p>
+            </div>
+
+            {/* Upload area */}
+            <div
+              className={`border-2 border-dashed rounded-lg h-64 flex flex-col items-center justify-center p-6 transition-colors ${
+                isDragging ? "border-primary bg-primary/5" : "hover:border-primary/50"
+              } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <line x1="10" y1="9" x2="8" y2="9" />
-            </svg>
-            <p className="text-center text-muted-foreground mb-2">
-              Arrastra y suelta tu archivo PDF aquí
-            </p>
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              o
-            </p>
-            <label htmlFor="pdf-upload">
-              <Button
-                variant="outline"
-                className="cursor-pointer"
-                disabled={isProcessing}
-              >
-                Selecciona PDF
-                <input
-                  id="pdf-upload"
-                  type="file"
-                  className="hidden"
-                  accept=".pdf"
-                  onChange={handleFileInputChange}
-                  disabled={isProcessing}
-                />
-              </Button>
-            </label>
+              {isUploading ? (
+                <div className="text-center">
+                  <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Subiendo y procesando PDF...</p>
+                </div>
+              ) : (
+                <>
+                  <Upload className="w-12 h-12 text-muted-foreground mb-4" />
+                  <p className="text-center text-muted-foreground mb-2">
+                    Arrastra y suelta tu archivo PDF aquí
+                  </p>
+                  <p className="text-center text-sm text-muted-foreground mb-4">
+                    o
+                  </p>
+                  <label htmlFor="pdf-upload">
+                    <Button
+                      variant="outline"
+                      className="cursor-pointer"
+                      disabled={isDisabled}
+                    >
+                      Selecciona PDF
+                      <input
+                        id="pdf-upload"
+                        type="file"
+                        className="hidden"
+                        accept=".pdf"
+                        onChange={handleFileInputChange}
+                        disabled={isDisabled}
+                      />
+                    </Button>
+                  </label>
+                </>
+              )}
+            </div>
+            
+            <div className="text-sm text-muted-foreground text-center space-y-1">
+              <p>Tamaño máximo: 10MB</p>
+              <p>Solo archivos PDF con texto extraíble</p>
+            </div>
           </div>
-          <div className="mt-4 text-sm text-muted-foreground text-center">
-            <p>Tamaño máximo: 100MB</p>
+
+          <div className="mt-6 p-4 bg-muted rounded-lg">
+            <h4 className="font-medium mb-2">Después de subir:</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• El texto será extraído automáticamente</li>
+              <li>• El documento se agregará al sistema RAG</li>
+              <li>• Estará disponible para consultas inmediatamente</li>
+              <li>• Las respuestas incluirán referencias al documento</li>
+            </ul>
           </div>
         </CardContent>
       </Card>

@@ -7,6 +7,7 @@ import ChatMessage, { Message, MessageRole } from "./ChatMessage";
 import { PDFData } from "./PDFUploader";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { askQuestion, checkBackendHealth } from "@/services/PDFService";
 
 interface ChatInterfaceProps {
   pdfs: PDFData[];
@@ -17,33 +18,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [backendHealthy, setBackendHealthy] = useState<boolean>(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Add intro message when component mounts
+  // Check backend health and add intro message when component mounts
   useEffect(() => {
-    const welcomeMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: pdfs.length > 0 
-        ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documento${pdfs.length !== 1 ? 's' : ''} subidos.`
-        : "Estoy listo para chatear! Sube algunos documentos para que pueda responder preguntas sobre ellos.",
-      timestamp: new Date(),
+    const initializeChat = async () => {
+      const isHealthy = await checkBackendHealth();
+      setBackendHealthy(isHealthy);
+      
+      const welcomeMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: isHealthy 
+          ? "¡Hola! Estoy conectado al sistema RAG y listo para responder preguntas sobre documentos de admisión. ¿En qué puedo ayudarte?"
+          : "Hola! Actualmente estoy en modo offline. El sistema RAG no está disponible, pero puedo intentar ayudarte con información general.",
+        timestamp: new Date(),
+      };
+      setMessages([welcomeMessage]);
     };
-    setMessages([welcomeMessage]);
+    
+    initializeChat();
   }, []);
 
-  // Update welcome message when PDFs change
-  useEffect(() => {
-    if (messages.length === 1 && messages[0].role === "assistant") {
-      const updatedWelcomeMessage: Message = {
-        ...messages[0],
-        content: pdfs.length > 0 
-          ? `Estoy listo para contestar preguntas, tienes ${pdfs.length} documento${pdfs.length !== 1 ? 's' : ''} subidos.`
-          : "Estoy listo para chatear! Sube algunos documentos para que pueda responder preguntas sobre ellos.",
-      };
-      setMessages([updatedWelcomeMessage]);
-    }
-  }, [pdfs]);
+  // Reset conversation when starting new chat
+  const handleStartNewChat = () => {
+    setConversationId(undefined);
+    onStartNewChat();
+  };
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -64,86 +67,73 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
     };
     
     setMessages((prev) => [...prev, userMessage]);
+    const question = input;
     setInput("");
     setIsProcessing(true);
     
     try {
-      // Simulate AI processing time
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      let aiResponse: string;
-      
-      if (pdfs.length > 0) {
-        // In a real implementation, we would:
-        // 1. Process the content of all PDFs
-        // 2. Create embeddings from the PDF content
-        // 3. Search for relevant content based on the user's question across all PDFs
-        // 4. Generate a response using an AI model
-        aiResponse = generateResponseFromPDFs(input, pdfs);
+      if (backendHealthy) {
+        // Use real RAG backend
+        const response = await askQuestion(question, conversationId);
+        
+        // Set conversation ID if this is a new conversation
+        if (!conversationId && response.id) {
+          const conversationIdFromResponse = response.id.split('-')[0]; // Extract conversation ID from message ID
+          setConversationId(conversationIdFromResponse);
+        }
+        
+        const assistantMessage: Message = {
+          id: response.id,
+          role: "assistant",
+          content: response.response,
+          timestamp: new Date(response.timestamp),
+          sources: response.sources,
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
       } else {
-        // General chat without PDF context
-        aiResponse = generateGeneralResponse(input);
+        // Fallback to mock responses when backend is unavailable
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        const assistantMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: "Lo siento, el sistema RAG no está disponible en este momento. Por favor, inténtalo más tarde o contacta al administrador.",
+          timestamp: new Date(),
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
       }
+    } catch (error) {
+      console.error("Error generando respuesta:", error);
+      toast.error("Error al generar respuesta");
       
-      const assistantMessage: Message = {
+      // Add error message
+      const errorMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
-        content: aiResponse,
+        content: "Lo siento, ocurrió un error al procesar tu pregunta. Por favor, inténtalo de nuevo.",
         timestamp: new Date(),
       };
       
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error("Error generando respuesta:", error);
-      toast.error("Falla al generar respuesta");
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsProcessing(false);
     }
   };
   
-  const generateResponseFromPDFs = (question: string, pdfs: PDFData[]): string => {
-    // Simple mock responses based on question keywords when PDFs are available
-    const pdfNames = pdfs.map(pdf => `"${pdf.name}"`).join(", ");
-    
-
-    const responses = [
-      `Basado en el contenido de tus documentos (${pdfNames}), encontré que los puntos principales relacionados con tu pregunta son sobre mejorar la eficiencia a través de la optimización de procesos y la asignación de recursos.`,
-      `Tus documentos mencionan que este tema fue investigado extensamente en 2023, con hallazgos que sugieren una correlación entre los factores que preguntas.`,
-      `Según los documentos subidos, la respuesta a tu pregunta involucra múltiples factores incluyendo tendencias de mercado, requisitos regulatorios y restricciones operativas.`,
-      `Busqué en todos tus documentos y encontré que aproximadamente el 75% de los casos exhiben el patrón que preguntas, con variaciones dependiendo de factores contextuales.`,
-      `Los documentos muestran diferentes perspectivas sobre este tema. Algunos enfatizan la importancia de la innovación, mientras que otros se centran más en la gestión de riesgos y el cumplimiento.`
-    ]
-    
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-  
-  const generateGeneralResponse = (question: string): string => {
-    // Simple mock responses for general chat without PDFs
-
-    const responses = [
-      "Puedo proporcionarte información general sobre este tema, pero si subes documentos relevantes, podré darte respuestas más específicas.",
-      "¡Esa es una pregunta interesante! En general, los expertos sugieren abordar esto desde múltiples ángulos. Sube documentos específicos para obtener información más personalizada.",
-      "Según el conocimiento general, hay varias perspectivas sobre este asunto. Para obtener información más precisa, considera subir PDFs relevantes.",
-      "Puedo hablar sobre este tema en términos generales. Para obtener información de documentos específicos, intenta subir algunos PDFs relacionados con tu pregunta.",
-      "Si bien puedo discutir esto en términos generales, mi especialidad es analizar el contenido de documentos. ¡Sube algunos PDFs para ver cómo puedo extraer información específica para ti!"
-    ]
-    
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
 
   return (
     <Card className="flex-grow flex flex-col h-full">
       <CardHeader className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium">
-            Asistente Virtual
-            {pdfs.length > 0 && (
-              <span className="text-sm font-normal text-muted-foreground ml-2">
-                ({pdfs.length} document{pdfs.length !== 1 ? 's' : ''})
-              </span>
-            )}
+            Asistente Virtual RAG
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              ({backendHealthy ? 'Conectado' : 'Offline'})
+            </span>
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={onStartNewChat}>
+          <Button variant="outline" size="sm" onClick={handleStartNewChat}>
             Nuevo Chat
           </Button>
         </div>
@@ -168,7 +158,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={pdfs.length > 0 ? "Preguntame sobre tus documentos" : "Preguntame cualquier cosa..."}
+            placeholder={backendHealthy ? "Pregunta sobre documentos de admisión..." : "Sistema offline - funcionalidad limitada"}
             disabled={isProcessing}
             className="flex-grow"
           />
