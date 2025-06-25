@@ -24,8 +24,41 @@ export interface ChatResponse {
 
 export interface Conversation {
   id: string;
-  messages: ChatMessage[];
   created_at: string;
+  updated_at: string;
+  title: string | null;
+  message_count: number;
+  last_message: string | null;
+}
+
+export interface ConversationWithMessages {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  title: string | null;
+  messages: ChatMessage[];
+}
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  message: string;
+}
+
+export interface AdminStats {
+  total_users: number;
+  active_users: number;
+  total_conversations: number;
+  total_messages: number;
+  total_documents: number;
 }
 
 class ApiClient {
@@ -49,11 +82,25 @@ class ApiClient {
 
     const response = await fetch(url, {
       ...options,
+      credentials: 'include', // Include cookies for session management
       headers: {
         ...defaultHeaders,
         ...options.headers,
       },
     });
+
+    // Handle authentication errors
+    if (response.status === 401) {
+      // Redirect to login page or handle auth error
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+      throw new Error('Authentication required');
+    }
+
+    if (response.status === 403) {
+      throw new Error('Access forbidden - insufficient permissions');
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -79,13 +126,13 @@ class ApiClient {
   }
 
   // Get conversations
-  async getConversations(): Promise<ApiResponse<Conversation[]>> {
+  async getConversations(): Promise<ApiResponse<{ conversations: Conversation[] }>> {
     return this.makeRequest('/conversations');
   }
 
   // Get specific conversation
-  async getConversation(id: string): Promise<ApiResponse<Conversation>> {
-    return this.makeRequest(`/conversations?conversation_id=${id}`);
+  async getConversation(id: string): Promise<ApiResponse<ConversationWithMessages>> {
+    return this.makeRequest(`/conversations?id=${id}`);
   }
 
   // Delete conversation
@@ -100,7 +147,7 @@ class ApiClient {
     return this.makeRequest('/info');
   }
 
-  // Upload PDF
+  // Upload PDF (Admin only)
   async uploadPDF(file: File, sourceUrl?: string): Promise<ApiResponse<{
     document_id: string;
     filename: string;
@@ -122,6 +169,89 @@ class ApiClient {
         // Don't set Content-Type, let browser set it with boundary for multipart/form-data
       },
     });
+  }
+
+  // Authentication endpoints
+  async login(email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return this.makeRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  }
+
+  async register(username: string, email: string, password: string): Promise<ApiResponse<AuthResponse>> {
+    return this.makeRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password }),
+    });
+  }
+
+  async logout(): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  async getMe(): Promise<ApiResponse<{ user: User }>> {
+    return this.makeRequest('/auth/me');
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        current_password: currentPassword, 
+        new_password: newPassword 
+      }),
+    });
+  }
+
+  async getAuthStatus(): Promise<ApiResponse<{ authenticated: boolean; user?: User }>> {
+    return this.makeRequest('/auth/status');
+  }
+
+  // Admin endpoints
+  async getAllUsers(): Promise<ApiResponse<{ users: User[] }>> {
+    return this.makeRequest('/admin/users');
+  }
+
+  async getUser(userId: string): Promise<ApiResponse<{ user: User }>> {
+    return this.makeRequest(`/admin/users/${userId}`);
+  }
+
+  async createUser(username: string, email: string, password: string, role?: 'USER' | 'ADMIN'): Promise<ApiResponse<{ user: User }>> {
+    return this.makeRequest('/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ username, email, password, role }),
+    });
+  }
+
+  async promoteUser(userId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/admin/users/${userId}/promote`, {
+      method: 'POST',
+    });
+  }
+
+  async demoteUser(userId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/admin/users/${userId}/demote`, {
+      method: 'POST',
+    });
+  }
+
+  async activateUser(userId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/admin/users/${userId}/activate`, {
+      method: 'POST',
+    });
+  }
+
+  async deactivateUser(userId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/admin/users/${userId}/deactivate`, {
+      method: 'POST',
+    });
+  }
+
+  async getAdminStats(): Promise<ApiResponse<AdminStats>> {
+    return this.makeRequest('/admin/stats');
   }
 }
 

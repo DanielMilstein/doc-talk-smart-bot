@@ -1,6 +1,6 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
-import { apiClient, ChatMessage } from './apiClient';
+import { apiClient, ChatMessage, Conversation, ConversationWithMessages } from './apiClient';
 
 // This would normally be set up properly in a real app
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -52,18 +52,43 @@ export async function checkBackendHealth(): Promise<boolean> {
   }
 }
 
-// Get conversation history
-export async function getConversationHistory(conversationId?: string) {
+// Get all conversations
+export async function getAllConversations(): Promise<Conversation[]> {
   try {
-    if (conversationId) {
-      const response = await apiClient.getConversation(conversationId);
-      return response.success ? response.data : null;
-    } else {
-      const response = await apiClient.getConversations();
-      return response.success ? response.data : [];
-    }
+    const response = await apiClient.getConversations();
+    return response.success && response.data ? response.data.conversations : [];
   } catch (error) {
-    console.error('Error getting conversation history:', error);
-    return conversationId ? null : [];
+    console.error('Error getting conversations:', error);
+    return [];
   }
+}
+
+// Get specific conversation with messages
+export async function getConversationWithMessages(conversationId: string): Promise<ConversationWithMessages | null> {
+  try {
+    const response = await apiClient.getConversation(conversationId);
+    return response.success ? response.data : null;
+  } catch (error) {
+    console.error('Error getting conversation:', error);
+    return null;
+  }
+}
+
+// Delete conversation
+export async function deleteConversation(conversationId: string): Promise<boolean> {
+  try {
+    const response = await apiClient.deleteConversation(conversationId);
+    return response.success;
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
+    return false;
+  }
+}
+
+// Generate conversation title from first message
+export function generateConversationTitle(firstMessage: string): string {
+  // Take first 50 characters and add ellipsis if needed
+  const maxLength = 50;
+  const title = firstMessage.trim();
+  return title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
 }

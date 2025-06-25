@@ -5,8 +5,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { InfoIcon, Upload, CheckCircle } from "lucide-react";
+import { InfoIcon, Upload, CheckCircle, Shield } from "lucide-react";
 import { apiClient } from "@/services/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PDFUploaderProps {
   onFileProcessed: (pdfData: PDFData) => void;
@@ -26,6 +27,10 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [sourceUrl, setSourceUrl] = useState("");
+  const { user } = useAuth();
+
+  // Check if user has admin privileges
+  const isAdmin = user?.role === 'ADMIN';
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -113,14 +118,44 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
     }
   }, [handleFileUpload]);
 
-  const isDisabled = isProcessing || isUploading;
+  const isDisabled = isProcessing || isUploading || !isAdmin;
+
+  // If user is not admin, show restricted access message
+  if (!isAdmin) {
+    return (
+      <div className="w-full h-full flex flex-col space-y-4">
+        <Alert variant="destructive">
+          <Shield className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Acceso restringido:</strong> Solo los administradores pueden subir documentos PDF. 
+            Contacta a un administrador para agregar nuevos documentos al sistema.
+          </AlertDescription>
+        </Alert>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Subida de Documentos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Esta funcionalidad está restringida a usuarios administradores para mantener 
+              la calidad y seguridad del sistema RAG.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col space-y-4">
       <Alert>
         <InfoIcon className="h-4 w-4" />
         <AlertDescription>
-          <strong>Subida de documentos habilitada:</strong> Puedes subir archivos PDF que se procesarán 
+          <strong>Subida de documentos habilitada:</strong> Como administrador, puedes subir archivos PDF que se procesarán 
           automáticamente con el sistema RAG. Los documentos se almacenarán en el servidor y estarán 
           disponibles para consultas inmediatamente.
         </AlertDescription>

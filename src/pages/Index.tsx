@@ -1,10 +1,20 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut, User, Settings } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
   
   const goToChat = () => {
     navigate("/chat");
@@ -14,30 +24,101 @@ const Index: React.FC = () => {
     navigate("/admin");
   };
 
+  const goToLogin = () => {
+    navigate("/login");
+  };
+
+  const goToRegister = () => {
+    navigate("/register");
+  };
+
+  const goToProfile = () => {
+    navigate("/profile");
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <div className="min-h-screen bg-secondary/30 flex flex-col">
       <header className="bg-background border-b py-4 px-6">
         <div className="container flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-          <span className="text-primary">ChatAdmisión</span>
+            <span className="text-primary">ChatAdmisión</span>
           </h1>
+          
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  {user?.username}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={goToProfile}>
+                  <User className="h-4 w-4 mr-2" />
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={goToProfile}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configuración
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="space-x-2">
+              <Button variant="outline" size="sm" onClick={goToLogin}>
+                Iniciar sesión
+              </Button>
+              <Button size="sm" onClick={goToRegister}>
+                Registrarse
+              </Button>
+            </div>
+          )}
         </div>
       </header>
       
       <main className="container flex-grow py-6">
         <div className="flex flex-col items-center justify-center space-y-8 h-[70vh]">
-          <h2 className="text-3xl font-bold">Bienvenido a ChatAdmisión</h2>
+          <h2 className="text-3xl font-bold">
+            {isAuthenticated ? `¡Hola, ${user?.username}!` : 'Bienvenido a ChatAdmisión'}
+          </h2>
           <p className="text-muted-foreground text-center max-w-md">
-            Pregunta tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas.
+            {isAuthenticated 
+              ? 'Puedes comenzar a chatear o administrar documentos según tus permisos.'
+              : 'Pregunta tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas. Inicia sesión para comenzar.'
+            }
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button size="lg" onClick={goToChat}>
-              Empezar chat
-            </Button>
-            <Button size="lg" variant="outline" onClick={goToAdmin}>
-              Panel de administración
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button size="lg" onClick={goToChat}>
+                  Empezar chat
+                </Button>
+                {user?.role === 'ADMIN' && (
+                  <Button size="lg" variant="outline" onClick={goToAdmin}>
+                    Panel de administración
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <Button size="lg" onClick={goToLogin}>
+                  Iniciar sesión
+                </Button>
+                <Button size="lg" variant="outline" onClick={goToRegister}>
+                  Registrarse
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </main>

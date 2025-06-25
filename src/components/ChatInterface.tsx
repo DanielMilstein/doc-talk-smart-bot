@@ -7,40 +7,104 @@ import ChatMessage, { Message, MessageRole } from "./ChatMessage";
 import { PDFData } from "./PDFUploader";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-import { askQuestion, checkBackendHealth } from "@/services/PDFService";
+import { askQuestion, checkBackendHealth, getConversationWithMessages } from "@/services/PDFService";
+import { ConversationWithMessages } from "@/services/apiClient";
 
 interface ChatInterfaceProps {
   pdfs: PDFData[];
   onStartNewChat: () => void;
+  loadConversationId?: string;
+  onConversationCreated?: (conversationId: string) => void;
+  onMessageSent?: () => void; // Callback when a message is sent
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  pdfs, 
+  onStartNewChat, 
+  loadConversationId,
+  onConversationCreated,
+  onMessageSent 
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [backendHealthy, setBackendHealthy] = useState<boolean>(true);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Check backend health and add intro message when component mounts
+  // Load conversation when loadConversationId changes
   useEffect(() => {
-    const initializeChat = async () => {
-      const isHealthy = await checkBackendHealth();
-      setBackendHealthy(isHealthy);
-      
-      const welcomeMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: isHealthy 
-          ? "¡Hola! Estoy conectado al sistema RAG y listo para responder preguntas sobre documentos de admisión. ¿En qué puedo ayudarte?"
-          : "Hola! Actualmente estoy en modo offline. El sistema RAG no está disponible, pero puedo intentar ayudarte con información general.",
-        timestamp: new Date(),
-      };
-      setMessages([welcomeMessage]);
-    };
-    
-    initializeChat();
+    if (loadConversationId) {
+      loadConversation(loadConversationId);
+    } else {
+      // New chat - reset everything
+      setMessages([]);
+      setConversationId(undefined);
+      initializeNewChat();
+    }
+  }, [loadConversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check backend health
+  useEffect(() => {
+    checkBackendHealth().then(setBackendHealthy);
   }, []);
+
+  const initializeNewChat = async () => {
+    const isHealthy = await checkBackendHealth();
+    setBackendHealthy(isHealthy);
+    
+    const welcomeMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: isHealthy 
+        ? "¡Hola! Estoy conectado al sistema RAG y listo para responder preguntas sobre documentos de admisión. ¿En qué puedo ayudarte?"
+        : "Hola! Actualmente estoy en modo offline. El sistema RAG no está disponible, pero puedo intentar ayudarte con información general.",
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+  };
+
+  const loadConversation = async (conversationIdToLoad: string) => {
+    setIsLoadingConversation(true);
+    try {
+      const conversation = await getConversationWithMessages(conversationIdToLoad);
+      if (conversation) {
+        setConversationId(conversation.id);
+        
+        // Convert backend messages to frontend Message format
+        const convertedMessages: Message[] = [];
+        conversation.messages.forEach(msg => {
+          // Add user message
+          convertedMessages.push({
+            id: `${msg.id}-question`,
+            role: "user" as MessageRole,
+            content: msg.question,
+            timestamp: new Date(msg.timestamp),
+          });
+          // Add assistant response
+          convertedMessages.push({
+            id: msg.id,
+            role: "assistant" as MessageRole,
+            content: msg.response,
+            timestamp: new Date(msg.timestamp),
+            sources: msg.sources,
+          });
+        });
+        
+        setMessages(convertedMessages);
+      } else {
+        toast.error('Conversación no encontrada');
+        onStartNewChat();
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      toast.error('Error al cargar conversación');
+      onStartNewChat();
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
 
   // Reset conversation when starting new chat
   const handleStartNewChat = () => {
@@ -77,9 +141,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
         const response = await askQuestion(question, conversationId);
         
         // Set conversation ID if this is a new conversation
-        if (!conversationId && response.id) {
-          const conversationIdFromResponse = response.id.split('-')[0]; // Extract conversation ID from message ID
-          setConversationId(conversationIdFromResponse);
+        if (!conversationId) {
+          setConversationId(response.conversation_id);
+          // Notify parent component about new conversation
+          if (onConversationCreated) {
+            onConversationCreated(response.conversation_id);
+          }
         }
         
         const assistantMessage: Message = {
@@ -91,6 +158,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
         };
         
         setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Notify parent that a message was sent
+        if (onMessageSent) {
+          onMessageSent();
+        }
       } else {
         // Fallback to mock responses when backend is unavailable
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -139,19 +211,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ pdfs, onStartNewChat }) =
         </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-auto p-6">
-        <div className="space-y-6">
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
-          {isProcessing && (
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full"></span>
-              <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full [animation-delay:150ms]"></span>
-              <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full [animation-delay:300ms]"></span>
+        {isLoadingConversation ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Cargando conversación...</p>
             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
+            {isProcessing && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full"></span>
+                <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full [animation-delay:150ms]"></span>
+                <span className="h-2 w-2 bg-muted-foreground/70 animate-bounce-subtle rounded-full [animation-delay:300ms]"></span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </CardContent>
       <CardFooter className="border-t p-4">
         <form onSubmit={handleSendMessage} className="flex items-center gap-2 w-full">
