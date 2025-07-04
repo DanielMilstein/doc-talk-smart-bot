@@ -14,7 +14,9 @@ export async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<stri
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const textItems = textContent.items.map((item: { str: string }) => item.str).join(' ');
+      const textItems = textContent.items
+        .map((item: any) => item.str || '')
+        .join(' ');
       fullText += textItems + '\n';
     }
 
@@ -26,7 +28,7 @@ export async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<stri
 }
 
 // RAG implementation using the backend API
-export async function askQuestion(question: string, conversationId?: string): Promise<ChatMessage> {
+export async function askQuestion(question: string, conversationId?: string): Promise<{ message: ChatMessage; conversation_id: string }> {
   try {
     const response = await apiClient.chat(question, conversationId);
     
@@ -34,7 +36,10 @@ export async function askQuestion(question: string, conversationId?: string): Pr
       throw new Error(response.error || 'Failed to get response from backend');
     }
     
-    return response.data.message;
+    return {
+      message: response.data.message,
+      conversation_id: response.data.conversation_id
+    };
   } catch (error) {
     console.error('Error asking question:', error);
     throw new Error('Failed to get response from RAG system');
