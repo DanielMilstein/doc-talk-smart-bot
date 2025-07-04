@@ -110,7 +110,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     href={href} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline"
+                    className="text-primary hover:text-primary/80 underline"
                   >
                     {children}
                   </a>
@@ -134,7 +134,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                   href={source}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:text-blue-800 underline block"
+                  className="text-xs text-primary hover:text-primary/80 underline block"
                 >
                   {source}
                 </a>
