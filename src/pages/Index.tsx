@@ -28,9 +28,6 @@ const Index: React.FC = () => {
     navigate("/login");
   };
 
-  const goToRegister = () => {
-    navigate("/register");
-  };
 
   const goToProfile = () => {
     navigate("/profile");
@@ -90,9 +87,6 @@ const Index: React.FC = () => {
               <Button variant="outline" size="sm" onClick={goToLogin} className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary">
                 Iniciar sesión
               </Button>
-              <Button size="sm" onClick={goToRegister} className="bg-primary-foreground text-primary hover:bg-white hover:text-primary">
-                Registrarse
-              </Button>
             </div>
           )}
         </div>
@@ -106,7 +100,7 @@ const Index: React.FC = () => {
           <p className="text-muted-foreground text-center max-w-md">
             {isAuthenticated 
               ? 'Puedes comenzar a chatear o administrar documentos según tus permisos.'
-              : 'Pregunta tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas. Inicia sesión para comenzar.'
+              : 'Pregunta tus dudas sobre el proceso de admisión y obtén respuestas rápidas y precisas. Contacta al administrador para obtener acceso.'
             }
           </p>
           

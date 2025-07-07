@@ -252,8 +252,8 @@ const UserManagement: React.FC = () => {
                   value={newUserRole}
                   onChange={(e) => setNewUserRole(e.target.value as 'user' | 'admin')}
                 >
-                  <option value="USER">Usuario</option>
-                  <option value="ADMIN">Administrador</option>
+                  <option value="user">Usuario</option>
+                  <option value="admin">Administrador</option>
                 </select>
               </div>
             </div>

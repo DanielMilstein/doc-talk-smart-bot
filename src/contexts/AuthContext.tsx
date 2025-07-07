@@ -15,7 +15,6 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (emailOrUsername: string, password: string) => Promise<boolean>;
-  register: (username: string, email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuthStatus: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
@@ -103,33 +102,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (username: string, email: string, password: string): Promise<boolean> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setUser(data.data.user);
-        toast.success('Registro exitoso');
-        return true;
-      } else {
-        toast.error(data.error || 'Error al registrarse');
-        return false;
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error('Error de conexión al intentar registrarse');
-      return false;
-    }
-  };
 
   const logout = async () => {
     try {
@@ -185,7 +157,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isLoading,
     login,
-    register,
     logout,
     checkAuthStatus,
     changePassword,

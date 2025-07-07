@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,13 +111,7 @@ const LoginForm: React.FC = () => {
             </Button>
             
             <div className="text-center text-sm text-muted-foreground">
-              ¿No tienes cuenta?{' '}
-              <Link 
-                to="/register" 
-                className="text-primary hover:underline"
-              >
-                Regístrate aquí
-              </Link>
+              ¿No tienes cuenta? Contacta al administrador para obtener acceso.
             </div>
           </CardFooter>
         </form>
