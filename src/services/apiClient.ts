@@ -17,9 +17,39 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface ConfidenceInfo {
+  level: 'high' | 'medium' | 'low' | 'very_low';
+  score: number;
+  explanation: string;
+  recommendations: string[];
+}
+
+export interface ConversationContext {
+  total_turns: number;
+  has_summary: boolean;
+  recent_turns: number;
+  last_updated: string;
+}
+
+export interface EnhancedInfo {
+  query_type: string;
+  complexity_score: number;
+  processing_time: number;
+  context_summary: {
+    total_docs: number;
+    total_chars: number;
+    sources: string[];
+  };
+  confidence?: ConfidenceInfo;
+  recommendations: string[];
+  is_follow_up: boolean;
+  conversation_context: ConversationContext;
+}
+
 export interface ChatResponse {
   conversation_id: string;
   message: ChatMessage;
+  enhanced_info?: EnhancedInfo;
 }
 
 export interface Conversation {
@@ -59,6 +89,28 @@ export interface AdminStats {
   total_conversations: number;
   total_messages: number;
   total_documents: number;
+}
+
+export interface RagStats {
+  total_queries: number;
+  average_processing_time: number;
+  confidence_distribution: {
+    high: number;
+    medium: number;
+    low: number;
+    very_low: number;
+  };
+  query_type_distribution: {
+    [key: string]: number;
+  };
+}
+
+export interface MemoryStats {
+  cache_size: number;
+  active_conversations: number;
+  total_memories: number;
+  average_conversation_length: number;
+  follow_up_rate: number;
 }
 
 class ApiClient {
@@ -252,6 +304,38 @@ class ApiClient {
 
   async getAdminStats(): Promise<ApiResponse<AdminStats>> {
     return this.makeRequest('/admin/stats');
+  }
+
+  // RAG Statistics endpoints
+  async getRagStats(): Promise<ApiResponse<{ rag_statistics: RagStats; description: string }>> {
+    return this.makeRequest('/rag/stats');
+  }
+
+  async resetRagStats(): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest('/rag/reset-stats', {
+      method: 'POST',
+    });
+  }
+
+  // Conversation Memory endpoints
+  async getConversationMemory(conversationId: string): Promise<ApiResponse<{
+    conversation_id: string;
+    has_memory: boolean;
+    memory_turns: number;
+    summary?: string;
+    recent_context?: Array<{ question: string; answer: string; timestamp: string }>;
+  }>> {
+    return this.makeRequest(`/conversations/${conversationId}/memory`);
+  }
+
+  async clearConversationMemory(conversationId: string): Promise<ApiResponse<{ message: string }>> {
+    return this.makeRequest(`/conversations/${conversationId}/memory`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getMemoryStats(): Promise<ApiResponse<{ memory_statistics: MemoryStats }>> {
+    return this.makeRequest('/memory/stats');
   }
 }
 

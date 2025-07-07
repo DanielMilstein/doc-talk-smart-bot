@@ -1,6 +1,6 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
-import { apiClient, ChatMessage, Conversation, ConversationWithMessages } from './apiClient';
+import { apiClient, ChatMessage, Conversation, ConversationWithMessages, ChatResponse } from './apiClient';
 
 // This would normally be set up properly in a real app
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
@@ -29,6 +29,7 @@ export async function extractTextFromPDF(arrayBuffer: ArrayBuffer): Promise<stri
 
 // RAG implementation using the backend API
 export async function askQuestion(question: string, conversationId?: string): Promise<{ message: ChatMessage; conversation_id: string }> {
+
   try {
     const response = await apiClient.chat(question, conversationId);
     
@@ -40,6 +41,7 @@ export async function askQuestion(question: string, conversationId?: string): Pr
       message: response.data.message,
       conversation_id: response.data.conversation_id
     };
+
   } catch (error) {
     console.error('Error asking question:', error);
     throw new Error('Failed to get response from RAG system');

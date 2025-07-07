@@ -11,7 +11,8 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  MoreVertical
+  MoreVertical,
+  Brain
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -245,10 +246,15 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
               </div>
             ) : (
               <div className="space-y-4 pb-4">
-                {Object.entries(groupedConversations).map(([group, convs]) => (
+                {Object.entries(groupedConversations).map(([group, convs]) => {
+                  const hasMemoryConversations = convs.some(conv => conv.message_count >= 5);
+                  return (
                   <div key={group}>
-                    <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2">
+                    <h3 className="text-xs font-medium text-muted-foreground mb-2 px-2 flex items-center gap-2">
                       {group}
+                      {hasMemoryConversations && (
+                        <Brain className="h-3 w-3" title="Algunas conversaciones tienen memoria activa" />
+                      )}
                     </h3>
                     <div className="space-y-1">
                       {convs.map((conversation) => (
@@ -271,6 +277,12 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
                               <Badge variant="secondary" className="text-xs">
                                 {conversation.message_count} mensajes
                               </Badge>
+                              {conversation.message_count >= 5 && (
+                                <Badge variant="outline" className="text-xs" title="Esta conversación tiene memoria activa">
+                                  <Brain className="h-3 w-3 mr-1" />
+                                  Memoria
+                                </Badge>
+                              )}
                               <span className="text-xs text-muted-foreground">
                                 <Calendar className="h-3 w-3 inline mr-1" />
                                 {formatDate(conversation.updated_at)}
@@ -306,7 +318,8 @@ const ChatHistory: React.FC<ChatHistoryProps> = ({
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
