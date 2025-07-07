@@ -15,6 +15,7 @@ export interface ChatMessage {
   response: string;
   sources: string[];
   timestamp: string;
+  enhancedInfo?: EnhancedInfo;
 }
 
 export interface ConfidenceInfo {
@@ -73,7 +74,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: 'user' | 'admin';
   is_active: boolean;
   created_at: string;
 }
@@ -103,17 +104,97 @@ export interface AdminStats {
   };
 }
 
+export interface DatabaseHealthStatus {
+  overall_status: 'healthy' | 'warning' | 'error';
+  error_count: number;
+  summary: {
+    sqlite_healthy: boolean;
+    vector_db_healthy: boolean;
+    file_system_healthy: boolean;
+    bm25_healthy: boolean;
+  };
+  systems: {
+    sqlite: {
+      status: 'healthy' | 'warning' | 'error';
+      connection: string;
+      users: number;
+      conversations: number;
+      messages: number;
+      tables: string[];
+      admins: number;
+    };
+    vector_db: {
+      status: 'healthy' | 'warning' | 'error';
+      database_path: string;
+      embedding_model: string;
+      total_chunks: number;
+      unique_documents: number;
+      pdf_documents: number;
+      uploaded_documents: number;
+    };
+    file_system: {
+      status: 'healthy' | 'warning' | 'error';
+      data_directory: string;
+      total_files: number;
+      markdown_files: number;
+      total_size_mb: number;
+      url_index_exists: boolean;
+    };
+    bm25_index: {
+      status: 'healthy' | 'warning' | 'error';
+      index_path: string;
+      index_file_exists: boolean;
+      file_size_mb: number;
+    };
+  };
+}
+
+export interface PDFStatistics {
+  total_pdfs: number;
+  scraped_pdfs: number;
+  uploaded_pdfs: number;
+  processing_status: {
+    success: number;
+    failed: number;
+  };
+  recent_additions: {
+    last_24h: number;
+    last_week: number;
+  };
+  pdf_sources: Array<{
+    document_hash: string;
+    original_source: string;
+    type: 'scraped' | 'uploaded';
+  }>;
+}
+
 export interface RagStats {
   total_queries: number;
-  average_processing_time: number;
+  avg_processing_time: number;
   confidence_distribution: {
     high: number;
     medium: number;
     low: number;
     very_low: number;
   };
-  query_type_distribution: {
+  query_type_distribution?: {
     [key: string]: number;
+  };
+  hybrid_search?: {
+    bm25_documents: number;
+    config: {
+      fusion_method: string;
+      keyword_weight: number;
+      parallel_search: boolean;
+      rrf_k: number;
+      semantic_weight: number;
+    };
+    query_type_weights: {
+      [key: string]: {
+        keyword: number;
+        semantic: number;
+      };
+    };
   };
 }
 
@@ -283,7 +364,7 @@ class ApiClient {
     return this.makeRequest(`/admin/users/${userId}`);
   }
 
-  async createUser(username: string, email: string, password: string, role?: 'USER' | 'ADMIN'): Promise<ApiResponse<{ user: User }>> {
+  async createUser(username: string, email: string, password: string, role?: 'user' | 'admin'): Promise<ApiResponse<{ user: User }>> {
     return this.makeRequest('/admin/users', {
       method: 'POST',
       body: JSON.stringify({ username, email, password, role }),
@@ -323,7 +404,10 @@ class ApiClient {
         data: response.data.stats
       };
     }
-    return response as ApiResponse<AdminStats>;
+    return {
+      ...response,
+      data: undefined
+    };
   }
 
   // RAG Statistics endpoints
@@ -356,6 +440,20 @@ class ApiClient {
 
   async getMemoryStats(): Promise<ApiResponse<{ memory_statistics: MemoryStats }>> {
     return this.makeRequest('/memory/stats');
+  }
+
+  // Database Health endpoints
+  async getDatabaseHealth(): Promise<ApiResponse<DatabaseHealthStatus>> {
+    return this.makeRequest('/database/health');
+  }
+
+  async getPDFStatistics(): Promise<ApiResponse<{ pdf_statistics: PDFStatistics; summary: PDFStatistics }>> {
+    return this.makeRequest('/database/pdf-count');
+  }
+
+  // General health endpoint
+  async getSystemHealth(): Promise<ApiResponse<{ service: string; status: string; version: string }>> {
+    return this.makeRequest('/health');
   }
 }
 

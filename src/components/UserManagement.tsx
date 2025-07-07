@@ -50,7 +50,7 @@ const UserManagement: React.FC = () => {
   const [newUserUsername, setNewUserUsername] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
-  const [newUserRole, setNewUserRole] = useState<'USER' | 'ADMIN'>('USER');
+  const [newUserRole, setNewUserRole] = useState<'user' | 'admin'>('user');
   const [showPassword, setShowPassword] = useState(false);
   const [creatingUser, setCreatingUser] = useState(false);
 
@@ -89,7 +89,7 @@ const UserManagement: React.FC = () => {
         setNewUserUsername('');
         setNewUserEmail('');
         setNewUserPassword('');
-        setNewUserRole('USER');
+        setNewUserRole('user');
       }
     } catch (error) {
       console.error('Error creating user:', error);
@@ -105,7 +105,7 @@ const UserManagement: React.FC = () => {
       if (response.success) {
         toast.success('Usuario promovido a administrador');
         setUsers(prev => prev.map(user => 
-          user.id === userId ? { ...user, role: 'ADMIN' } : user
+          user.id === userId ? { ...user, role: 'admin' } : user
         ));
       }
     } catch (error) {
@@ -120,7 +120,7 @@ const UserManagement: React.FC = () => {
       if (response.success) {
         toast.success('Usuario degradado a usuario regular');
         setUsers(prev => prev.map(user => 
-          user.id === userId ? { ...user, role: 'USER' } : user
+          user.id === userId ? { ...user, role: 'user' } : user
         ));
       }
     } catch (error) {
@@ -250,7 +250,7 @@ const UserManagement: React.FC = () => {
                   id="role"
                   className="w-full p-2 border rounded-md"
                   value={newUserRole}
-                  onChange={(e) => setNewUserRole(e.target.value as 'USER' | 'ADMIN')}
+                  onChange={(e) => setNewUserRole(e.target.value as 'user' | 'admin')}
                 >
                   <option value="USER">Usuario</option>
                   <option value="ADMIN">Administrador</option>
@@ -305,8 +305,8 @@ const UserManagement: React.FC = () => {
                       <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
-                          {user.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role === 'admin' ? 'Administrador' : 'Usuario'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -325,7 +325,7 @@ const UserManagement: React.FC = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            {user.role === 'USER' ? (
+                            {user.role === 'user' ? (
                               <DropdownMenuItem onClick={() => handlePromoteUser(user.id)}>
                                 <Shield className="h-4 w-4 mr-2" />
                                 Promover a Admin

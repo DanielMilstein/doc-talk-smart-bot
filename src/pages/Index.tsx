@@ -72,6 +72,12 @@ const Index: React.FC = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Configuración
                 </DropdownMenuItem>
+                {user?.role === 'admin' && (
+                  <DropdownMenuItem onClick={goToAdmin}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Panel Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />

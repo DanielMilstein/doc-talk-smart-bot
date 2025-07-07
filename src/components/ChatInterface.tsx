@@ -178,7 +178,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           content: response.message.response,
           timestamp: new Date(response.message.timestamp),
           sources: response.message.sources,
-          enhancedInfo: response.enhanced_info,
+          enhancedInfo: response.message.enhancedInfo
         };
         
         setMessages((prev) => [...prev, assistantMessage]);

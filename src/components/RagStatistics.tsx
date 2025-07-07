@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { apiClient, RagStats } from '@/services/apiClient';
-import { RefreshCw, TrendingUp, BarChart3, Brain, Clock, AlertCircle } from 'lucide-react';
+import { RefreshCw, TrendingUp, BarChart3, Brain, Clock, AlertCircle, Database } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -22,6 +22,7 @@ const RagStatistics: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadStats();
@@ -29,12 +30,16 @@ const RagStatistics: React.FC = () => {
 
   const loadStats = async () => {
     try {
+      setError(null);
       const response = await apiClient.getRagStats();
       if (response.success && response.data) {
         setStats(response.data.rag_statistics);
+      } else {
+        setError('No se pudieron cargar las estadísticas RAG');
       }
     } catch (error) {
       console.error('Error loading RAG stats:', error);
+      setError(`Error al cargar estadísticas RAG: ${error instanceof Error ? error.message : 'Error desconocido'}`);
       toast.error('Error al cargar estadísticas RAG');
     } finally {
       setLoading(false);
@@ -67,7 +72,7 @@ const RagStatistics: React.FC = () => {
   };
 
   const getQueryTypePercentage = (type: string) => {
-    if (!stats || stats.total_queries === 0) return 0;
+    if (!stats || stats.total_queries === 0 || !stats.query_type_distribution) return 0;
     const count = stats.query_type_distribution[type] || 0;
     return Math.round((count / stats.total_queries) * 100);
   };
@@ -83,6 +88,28 @@ const RagStatistics: React.FC = () => {
           <CardContent className="space-y-4">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-20 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Error al cargar estadísticas RAG
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              Reintentar
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -147,7 +174,7 @@ const RagStatistics: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats?.average_processing_time.toFixed(2) || '0.00'}s
+              {stats?.avg_processing_time?.toFixed(2) || '0.00'}s
             </div>
             <p className="text-xs text-muted-foreground">
               Por consulta
@@ -235,7 +262,7 @@ const RagStatistics: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {stats && Object.keys(stats.query_type_distribution).length > 0 ? (
+          {stats && stats.query_type_distribution && Object.keys(stats.query_type_distribution).length > 0 ? (
             <div className="space-y-4">
               {Object.entries(stats.query_type_distribution).map(([type, count]) => (
                 <div key={type} className="space-y-2">
@@ -254,6 +281,41 @@ const RagStatistics: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Hybrid Search Information */}
+      {stats?.hybrid_search && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Búsqueda Híbrida
+            </CardTitle>
+            <CardDescription>
+              Configuración del sistema de búsqueda híbrida
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Documentos en BM25</div>
+                <div className="text-2xl font-bold">{stats.hybrid_search.bm25_documents.toLocaleString()}</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Método de Fusión</div>
+                <div className="text-lg font-semibold capitalize">{stats.hybrid_search.config.fusion_method}</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Peso de Palabras Clave</div>
+                <div className="text-lg font-semibold">{Math.round(stats.hybrid_search.config.keyword_weight * 100)}%</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Peso Semántico</div>
+                <div className="text-lg font-semibold">{Math.round(stats.hybrid_search.config.semantic_weight * 100)}%</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Reset Confirmation Dialog */}
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
