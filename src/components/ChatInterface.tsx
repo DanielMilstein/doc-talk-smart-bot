@@ -81,6 +81,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         // Convert backend messages to frontend Message format
         const convertedMessages: Message[] = [];
+        
+        // Add welcome message first
+        const isHealthy = await checkBackendHealth();
+        setBackendHealthy(isHealthy);
+        
+        const welcomeMessage: Message = {
+          id: "welcome",
+          role: "assistant" as MessageRole,
+          content: isHealthy
+            ? "¡Hola! Estoy conectado al sistema RAG y listo para responder preguntas sobre documentos de admisión. ¿En qué puedo ayudarte?"
+            : "Hola! Actualmente estoy en modo offline. El sistema RAG no está disponible, pero puedo intentar ayudarte con información general.",
+          timestamp: new Date(),
+        };
+        convertedMessages.push(welcomeMessage);
+        
+        // Add conversation messages
         conversation.messages.forEach(msg => {
           // Add user message
           convertedMessages.push({

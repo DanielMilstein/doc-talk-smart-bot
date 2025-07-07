@@ -78,23 +78,30 @@ const Admin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary/30 flex flex-col">
-      <header className="bg-background border-b py-4 px-6">
+      <header className="bg-primary border-b py-4 px-6">
         <div className="container flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">
-            <span className="text-primary">ChatAdmisión</span> Admin
-          </h1>
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/Logo_Universidad_de_los_Andes.png" 
+              alt="Universidad de los Andes" 
+              className="h-8 w-auto mr-1"
+            />
+            <h1 className="text-2xl font-bold text-primary-foreground">
+              <span className="text-white">ChatAdmisión</span> Admin
+            </h1>
+          </div>
           
           <div className="flex items-center space-x-4">
-            <Button variant="outline" onClick={handleGoToHome}>
+            <Button variant="outline" onClick={handleGoToHome} className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary">
               Volver al Inicio
             </Button>
-            <Button onClick={handleGoToChat}>
+            <Button onClick={handleGoToChat} className="bg-primary-foreground text-primary hover:bg-white hover:text-primary">
               Ir al chat
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary">
                   <User className="h-4 w-4 mr-2" />
                   {user?.username}
                 </Button>

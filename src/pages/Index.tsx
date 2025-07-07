@@ -42,16 +42,23 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-secondary/30 flex flex-col">
-      <header className="bg-background border-b py-4 px-6">
+      <header className="bg-primary border-b py-4 px-6">
         <div className="container flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">
-            <span className="text-primary">ChatAdmisión</span>
-          </h1>
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/Logo_Universidad_de_los_Andes.png" 
+              alt="Universidad de los Andes" 
+              className="h-8 w-auto mr-1"
+            />
+            <h1 className="text-2xl font-bold text-primary-foreground">
+              <span className="text-white">ChatAdmisión</span>
+            </h1>
+          </div>
           
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary">
                   <User className="h-4 w-4 mr-2" />
                   {user?.username}
                 </Button>
@@ -74,10 +81,10 @@ const Index: React.FC = () => {
             </DropdownMenu>
           ) : (
             <div className="space-x-2">
-              <Button variant="outline" size="sm" onClick={goToLogin}>
+              <Button variant="outline" size="sm" onClick={goToLogin} className="border-primary-foreground text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary">
                 Iniciar sesión
               </Button>
-              <Button size="sm" onClick={goToRegister}>
+              <Button size="sm" onClick={goToRegister} className="bg-primary-foreground text-primary hover:bg-white hover:text-primary">
                 Registrarse
               </Button>
             </div>
