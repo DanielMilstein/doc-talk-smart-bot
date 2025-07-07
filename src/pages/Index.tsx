@@ -121,9 +121,6 @@ const Index: React.FC = () => {
                 <Button size="lg" onClick={goToLogin}>
                   Iniciar sesión
                 </Button>
-                <Button size="lg" variant="outline" onClick={goToRegister}>
-                  Registrarse
-                </Button>
               </>
             )}
           </div>
