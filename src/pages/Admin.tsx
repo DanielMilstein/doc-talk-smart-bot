@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, MessageSquare, Database, LogOut, User, Settings } from "lucide-react";
+import { Users, FileText, MessageSquare, Database, LogOut, User, Settings, BarChart } from "lucide-react";
 import { apiClient, AdminStats } from "@/services/apiClient";
 import UserManagement from "@/components/UserManagement";
+import RagStatistics from "@/components/RagStatistics";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -120,10 +121,11 @@ const Admin: React.FC = () => {
       
       <main className="container flex-grow py-6">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Resumen</TabsTrigger>
             <TabsTrigger value="documents">Documentos</TabsTrigger>
             <TabsTrigger value="users">Usuarios</TabsTrigger>
+            <TabsTrigger value="rag">Sistema RAG</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -212,6 +214,10 @@ const Admin: React.FC = () => {
           
           <TabsContent value="users" className="space-y-6">
             <UserManagement />
+          </TabsContent>
+          
+          <TabsContent value="rag" className="space-y-6">
+            <RagStatistics />
           </TabsContent>
         </Tabs>
       </main>

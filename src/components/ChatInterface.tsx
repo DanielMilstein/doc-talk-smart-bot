@@ -8,7 +8,8 @@ import { PDFData } from "./PDFUploader";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { askQuestion, checkBackendHealth, getConversationWithMessages } from "@/services/PDFService";
-import { ConversationWithMessages } from "@/services/apiClient";
+import { ConversationWithMessages, EnhancedInfo } from "@/services/apiClient";
+import DebugPanel, { DebugSettings } from "./DebugPanel";
 
 interface ChatInterfaceProps {
   pdfs: PDFData[];
@@ -31,6 +32,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [conversationId, setConversationId] = useState<string | undefined>();
   const [backendHealthy, setBackendHealthy] = useState<boolean>(true);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
+  const [debugSettings, setDebugSettings] = useState<DebugSettings>({
+    showConfidence: false,
+    showMemoryContext: false,
+    showProcessingTime: false,
+    showQueryAnalysis: false,
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Load conversation when loadConversationId changes
@@ -150,11 +157,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
         
         const assistantMessage: Message = {
-          id: response.id,
+          id: response.message.id,
           role: "assistant",
-          content: response.response,
-          timestamp: new Date(response.timestamp),
-          sources: response.sources,
+          content: response.message.response,
+          timestamp: new Date(response.message.timestamp),
+          sources: response.message.sources,
+          enhancedInfo: response.enhanced_info,
         };
         
         setMessages((prev) => [...prev, assistantMessage]);
@@ -196,6 +204,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   
 
   return (
+    <>
     <Card className="flex-grow flex flex-col h-full">
       <CardHeader className="border-b px-6 py-4">
         <div className="flex items-center justify-between">
@@ -221,7 +230,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ) : (
           <div className="space-y-6">
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <ChatMessage key={message.id} message={message} debugSettings={debugSettings} />
             ))}
             {isProcessing && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -249,6 +258,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </form>
       </CardFooter>
     </Card>
+    <DebugPanel settings={debugSettings} onSettingsChange={setDebugSettings} />
+    </>
   );
 };
 
