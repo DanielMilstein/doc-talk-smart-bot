@@ -59,8 +59,12 @@ const Admin: React.FC = () => {
   const loadDatabaseHealth = async () => {
     try {
       const response = await apiClient.getDatabaseHealth();
+      console.log('Database health response:', response);
       if (response.success && response.data) {
+        console.log('Database health data:', response.data);
         setDbHealth(response.data);
+      } else {
+        console.error('Failed to load database health - no data or unsuccessful response');
       }
     } catch (error) {
       console.error('Error loading database health:', error);
@@ -279,23 +283,23 @@ const Admin: React.FC = () => {
             </div>
 
             {/* Detailed System Health */}
-            {dbHealth && (
+            {dbHealth && dbHealth.systems && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-4">Estado Detallado del Sistema</h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        {getHealthIcon(dbHealth.systems.sqlite.status)}
+                        {getHealthIcon(dbHealth.systems?.sqlite?.status || 'error')}
                         Base de Datos SQLite
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems.sqlite.status).color}`}>
-                        {getHealthStatusDisplay(dbHealth.systems.sqlite.status).text}
+                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems?.sqlite?.status || 'error').color}`}>
+                        {getHealthStatusDisplay(dbHealth.systems?.sqlite?.status || 'error').text}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {dbHealth.systems.sqlite.users} usuarios, {dbHealth.systems.sqlite.conversations} conversaciones
+                        {dbHealth.systems?.sqlite?.users || 0} usuarios, {dbHealth.systems?.sqlite?.conversations || 0} conversaciones
                       </div>
                     </CardContent>
                   </Card>
@@ -303,16 +307,16 @@ const Admin: React.FC = () => {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        {getHealthIcon(dbHealth.systems.vector_db.status)}
+                        {getHealthIcon(dbHealth.systems?.vector_db?.status || 'error')}
                         Base de Datos Vectorial
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems.vector_db.status).color}`}>
-                        {getHealthStatusDisplay(dbHealth.systems.vector_db.status).text}
+                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems?.vector_db?.status || 'error').color}`}>
+                        {getHealthStatusDisplay(dbHealth.systems?.vector_db?.status || 'error').text}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {dbHealth.systems.vector_db.total_chunks.toLocaleString()} chunks, {dbHealth.systems.vector_db.unique_documents} documentos
+                        {dbHealth.systems?.vector_db?.total_chunks?.toLocaleString() || 0} chunks, {dbHealth.systems?.vector_db?.unique_documents || 0} documentos
                       </div>
                     </CardContent>
                   </Card>
@@ -320,16 +324,16 @@ const Admin: React.FC = () => {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        {getHealthIcon(dbHealth.systems.file_system.status)}
+                        {getHealthIcon(dbHealth.systems?.file_system?.status || 'error')}
                         Sistema de Archivos
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems.file_system.status).color}`}>
-                        {getHealthStatusDisplay(dbHealth.systems.file_system.status).text}
+                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems?.file_system?.status || 'error').color}`}>
+                        {getHealthStatusDisplay(dbHealth.systems?.file_system?.status || 'error').text}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {dbHealth.systems.file_system.total_files} archivos ({dbHealth.systems.file_system.total_size_mb.toFixed(1)} MB)
+                        {dbHealth.systems?.file_system?.total_files || 0} archivos ({dbHealth.systems?.file_system?.total_size_mb?.toFixed(1) || '0.0'} MB)
                       </div>
                     </CardContent>
                   </Card>
@@ -337,16 +341,16 @@ const Admin: React.FC = () => {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        {getHealthIcon(dbHealth.systems.bm25_index.status)}
+                        {getHealthIcon(dbHealth.systems?.bm25_index?.status || 'error')}
                         Índice BM25
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems.bm25_index.status).color}`}>
-                        {getHealthStatusDisplay(dbHealth.systems.bm25_index.status).text}
+                      <div className={`text-sm font-semibold ${getHealthStatusDisplay(dbHealth.systems?.bm25_index?.status || 'error').color}`}>
+                        {getHealthStatusDisplay(dbHealth.systems?.bm25_index?.status || 'error').text}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {dbHealth.systems.bm25_index.file_size_mb.toFixed(1)} MB de índice
+                        {dbHealth.systems?.bm25_index?.file_size_mb?.toFixed(1) || '0.0'} MB de índice
                       </div>
                     </CardContent>
                   </Card>
