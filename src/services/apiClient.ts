@@ -84,11 +84,23 @@ export interface AuthResponse {
 }
 
 export interface AdminStats {
-  total_users: number;
-  active_users: number;
-  total_conversations: number;
-  total_messages: number;
-  total_documents: number;
+  users: {
+    total: number;
+    active: number;
+    admins: number;
+    regular_users: number;
+    inactive: number;
+    recent_registrations: number;
+  };
+  conversations: {
+    total: number;
+    recent: number;
+    average_per_user: number;
+  };
+  system: {
+    current_admin: string;
+    timestamp: string;
+  };
 }
 
 export interface RagStats {
@@ -303,7 +315,15 @@ class ApiClient {
   }
 
   async getAdminStats(): Promise<ApiResponse<AdminStats>> {
-    return this.makeRequest('/admin/stats');
+    const response = await this.makeRequest<{ stats: AdminStats }>('/admin/stats');
+    // Extract the stats from the nested response structure
+    if (response.success && response.data) {
+      return {
+        ...response,
+        data: response.data.stats
+      };
+    }
+    return response as ApiResponse<AdminStats>;
   }
 
   // RAG Statistics endpoints

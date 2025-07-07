@@ -110,7 +110,7 @@ const Index: React.FC = () => {
                 <Button size="lg" onClick={goToChat}>
                   Empezar chat
                 </Button>
-                {user?.role === 'ADMIN' && (
+                {user?.role === 'admin' && (
                   <Button size="lg" variant="outline" onClick={goToAdmin}>
                     Panel de administración
                   </Button>

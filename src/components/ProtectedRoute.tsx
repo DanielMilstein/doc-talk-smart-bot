@@ -29,8 +29,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check admin requirement
-  if (requireAdmin && user?.role !== 'ADMIN') {
+  // Check admin requirement (case-insensitive)
+  if (requireAdmin && user?.role?.toLowerCase() !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-secondary/30 p-4">
         <div className="text-center max-w-md">

@@ -30,7 +30,7 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({ onFileProcessed, isProcessing
   const { user } = useAuth();
 
   // Check if user has admin privileges
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'admin';
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";

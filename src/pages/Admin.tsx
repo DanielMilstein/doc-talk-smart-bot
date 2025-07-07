@@ -31,8 +31,10 @@ const Admin: React.FC = () => {
 
   // Load admin stats on component mount
   useEffect(() => {
+    console.log('Admin component mounted, user:', user);
+    console.log('User role:', user?.role);
     loadAdminStats();
-  }, []);
+  }, [user]);
 
   const loadAdminStats = async () => {
     try {
@@ -146,10 +148,10 @@ const Admin: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loadingStats ? '...' : stats?.total_users || 0}
+                    {loadingStats ? '...' : stats?.users?.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {loadingStats ? '...' : stats?.active_users || 0} activos
+                    {loadingStats ? '...' : stats?.users?.active || 0} activos
                   </p>
                 </CardContent>
               </Card>
@@ -163,10 +165,10 @@ const Admin: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loadingStats ? '...' : stats?.total_conversations || 0}
+                    {loadingStats ? '...' : stats?.conversations?.total || 0}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {loadingStats ? '...' : stats?.total_messages || 0} mensajes
+                    Promedio: {loadingStats ? '...' : stats?.conversations?.average_per_user || 0} por usuario
                   </p>
                 </CardContent>
               </Card>
@@ -180,7 +182,7 @@ const Admin: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loadingStats ? '...' : stats?.total_documents || 0}
+                    {loadingStats ? '...' : 'N/A'}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     PDFs cargados

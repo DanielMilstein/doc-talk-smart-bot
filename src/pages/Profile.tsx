@@ -84,7 +84,7 @@ const Profile: React.FC = () => {
                   <User className="h-4 w-4 mr-2" />
                   Ir al Chat
                 </DropdownMenuItem>
-                {user.role === 'ADMIN' && (
+                {user.role === 'admin' && (
                   <DropdownMenuItem onClick={handleGoToAdmin}>
                     <Settings className="h-4 w-4 mr-2" />
                     Panel Admin
@@ -141,11 +141,11 @@ const Profile: React.FC = () => {
                     </label>
                     <div className="mt-1">
                       <Badge 
-                        variant={user.role === 'ADMIN' ? 'default' : 'secondary'}
+                        variant={user.role === 'admin' ? 'default' : 'secondary'}
                         className="flex items-center gap-1 w-fit"
                       >
-                        {user.role === 'ADMIN' && <Shield className="h-3 w-3" />}
-                        {user.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                        {user.role === 'admin' && <Shield className="h-3 w-3" />}
+                        {user.role === 'admin' ? 'Administrador' : 'Usuario'}
                       </Badge>
                     </div>
                   </div>
@@ -169,7 +169,7 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
 
-                {user.role === 'ADMIN' && (
+                {user.role === 'admin' && (
                   <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
                       <Shield className="h-4 w-4" />
