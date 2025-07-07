@@ -251,17 +251,21 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, debugSettings }) => 
           <div className="mt-3 pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground mb-1">Fuentes:</p>
             <div className="space-y-1">
-              {message.sources.map((source, index) => (
+              {message.sources.map((source, index) => {
+                const match = source.match(/^url:\s*(.*?),\s*title:\s*(.*)$/);
+                const url = match?.[1] || source;
+                const title = match?.[2] || "Fuente";
+                return (
                 <a
                   key={index}
-                  href={source}
+                  href={url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-primary hover:text-primary/80 underline block"
                 >
-                  {source}
+                  {title}
                 </a>
-              ))}
+              )})}
             </div>
           </div>
         )}
